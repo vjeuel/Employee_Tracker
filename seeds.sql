@@ -1,7 +1,7 @@
 USE employee_db;
 
 INSERT INTO department (name)
-VALUES ();
+VALUES ("Creative Department", "Strategy Department", "User Experience Department");
 
 INSERT INTO role (name, salary, department_id)
 VALUES ();
