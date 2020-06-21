@@ -1,6 +1,6 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const conTab = require("console.table");
+require("console.table");
 
 var connection = mysql.createConnection({
    host: "localhost",
@@ -26,14 +26,14 @@ function run() {
          "View all Employees By Manager",
          "Add Employee",
          "Remove Employee",
-         "Update Employee Role",
-         "Update Employee Manager",
+         "Update Employee's Role",
+         "Update Employee's Manager",
          // -----------------------------------
-         "View all Roles",
+         "View Roles",
          "Add Role",
          "Remove Role",
          // -----------------------------------
-         "View all Department",
+         "View Department",
          "Add Department",
          "Remove Department",
          // -----------------------------------
@@ -48,8 +48,8 @@ function run() {
                viewEmp();
                break;
 
-            case "View all Employees by Department":
-               viewEmpDep();
+            case "View all Employees By Department":
+               askEmpDep();
                break;
             
             case "View all employees by Manager":
@@ -64,24 +64,28 @@ function run() {
                remEmp();
                break;
             
-            case "Update Employee Role":
+            case "Update Employee's Role":
                updEmpRole();
                break;
             
-            case "Update Employee Manager":
+            case "Update Employee's Manager":
                updEmpMan();
                break;
             
-            case "View all Roles":
-               viewRoles();
+            case "View Roles":
+               viewRole();
                break;
-            
+
             case "Add Role":
                addRole();
                break;
-            
+               
             case "Remove Role":
                remRole();
+               break;
+         
+            case "View Department":
+               viewDep();
                break;
             
             case "Add Department":
@@ -103,13 +107,51 @@ function run() {
       });
 };
 
+// List of all Employees
 function viewEmp() {
-   const query = "SELECT * FROM employees";
+   const query = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee, role.role, 
+      role.salary, departments.department, CONCAT(manager.first_name, " ", manager.last_name) AS manager 
+      FROM employees 
+      JOIN role ON employees.role_id = role.id
+      JOIN departments ON departments.id = role.departments_id JOIN employees as manager ON employees.manager_id = manager.id;`;
    connection.query(query, (err, res) => {
       if (err) throw err;
-      for (let i = 0; i < res.length; i++) {
-         console.log(`${res[i].first_name}, ${res[i].last_name} - ${res[i].role_id} - Manager: ${res[i].manager_id}`);
-      };
+      console.table(res);
       run();
    });
-}
+};
+
+// List of all Employees by Department
+function viewEmpDep(departments) {
+      const query =
+      `SELECT employees.id, concat(employees.first_name," ", employees.last_name) AS employee, role.role, 
+   role.salary, concat(manager.first_name, " ", manager.last_name) AS manager 
+   FROM employees 
+   JOIN role ON employees.role_id = role.id INNER JOIN employees AS manager ON employees.manager_id = manager.id
+   JOIN departments ON departments.id = role.departments_id WHERE departments.department = "${departments}";`;
+   connection.query(query, (err, res) => {
+         if (err) throw err;
+      console.table(res);
+      run();
+   });
+};
+
+// List of Departments
+function viewDep() {
+   const query = `SELECT id, department FROM departments`;
+   connection.query(query, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      run();
+   });
+};
+
+// List of Roles
+function viewRole() {
+   const query = `SELECT id, role, salary, departments_id FROM role`;
+   connection.query(query, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      run();
+   });
+};
