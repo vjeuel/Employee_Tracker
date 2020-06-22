@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/vjeuel/Employee_Tracker#readme",
   "dependencies": {
+    "cfonts": "^2.8.5",
     "console.table": "^0.10.0",
     "inquirer": "^7.2.0",
     "mysql": "^2.18.1"
