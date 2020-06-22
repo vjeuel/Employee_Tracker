@@ -83,7 +83,7 @@ function run() {
                viewEmpDep();
                break;
             
-            case "View all Employees by Manager":
+            case "View all Employees By Manager": // DONE
                viewEmpMan();
                break;
             
@@ -169,8 +169,7 @@ function viewEmpDep(){
 }
 
 function askEmpDep(departments){
-   inquirer
-   .prompt({
+   inquirer.prompt({
       type: "list",
       name: "chooseDep",
       message: "Choose Department: ",
@@ -197,32 +196,35 @@ function listEmpDep(departments){
 //  List of all Employees by Manager
 // ------------------------------------------------------------------------------------------------
 function viewEmpMan(){
-   const query = `SELECT departments.department FROM departments;`;
+   const query = `SELECT DISTINCT CONCAT(manager.first_name, " ", manager.last_name) AS name FROM employees
+   JOIN employees AS manager ON manager.id = employees.manager_id;`;
    connection.query(query, (err, res) => {
       if (err) throw err;
-      const departments = [];
+      const manager = [];
       for (let i = 0; i < res.length; i++) {
-         departments.push(res[i].department);
+         manager.push(res[i].name);
       }
-      askEmpMan(departments)
+      askEmpMan(manager)
    });
 }
 
-function askEmpMan(departments){
-   inquirer
-   .prompt({
+function askEmpMan(manager){
+   inquirer.prompt({
       type: "list",
-      name: "chooseDep",
-      message: "Choose Department: ",
-      choices: departments
+      name: "chooseMan",
+      message: "Choose Manager: ",
+      choices: manager
    })
    .then(answer => {
-      listEmpMan(answer.chooseDep);            
+      listEmpMan(answer.chooseMan);            
    });
 }
 
-function listEmpMan(departments){
-   const query = `SELECT `;
+function listEmpMan(manager){
+   const query = `SELECT employees.id,CONCAT (employees.first_name, " ", employees.last_name) AS employee, role.role,
+    role.salary, departments.department AS department
+    FROM employees JOIN role ON employees.role_id = role.id JOIN employees AS manager ON employees.manager_id = manager.id
+    JOIN departments ON departments.id = role.departments_id WHERE CONCAT(manager.first_name, " ", manager.last_name) = "${manager}";`;
    connection.query(query, (err, res) => {
       if (err) throw err;
       console.table(res);
