@@ -64,7 +64,7 @@ function run() {
          "Add Role",
          // "Remove Role",
          // -----------------------------------
-         "View Department",
+         "View Departments",
          "Add Department",
          // "Remove Department",
          // -----------------------------------
@@ -75,11 +75,11 @@ function run() {
    })
       .then(answer => {
          switch (answer.general) {
-            case "View all Employees":
+            case "View all Employees": // DONE
                viewEmployees();
                break;
 
-            case "View all Employees By Department":
+            case "View all Employees By Department": // DONE
                viewEmployeesDep();
                break;
             
@@ -103,8 +103,8 @@ function run() {
             //    updEmpMan();
             //    break;
                
-            case "View Roles":
-            viewRole();
+            case "View Roles": // DONE
+            viewRoles();
             break;
             
             case "Add Role":
@@ -115,8 +115,8 @@ function run() {
             //    remRole();
             //    break;
                
-            case "View Department":
-            viewDepartment();
+            case "View Departments": // DONE
+            viewDepartments();
             break;
             
             case "Add Department":
@@ -138,29 +138,41 @@ function run() {
             });
 };
 
-// Queries -----------------------------------------------------------------------------------------
-const queryEmployees = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
+// mysql to Arrays ---------------------------------------------------------------------------------
+const departmentsArr = [];
+function depArray() {
+   connection.query(`SELECT department FROM departments`, (err, res) => {
+      if (err) throw err;
+      for (let i = 0; i < res.length; i++) {
+         departmentsArr.push(res[i].department)
+      }
+   });
+};
+depArray();
+      
+const rolesArr = [];
+function rolesArray() {
+   connection.query(`SELECT role FROM roles`, (err, res) => {
+      if (err) throw err;
+      for (let i = 0; i < res.length; i++) {
+         rolesArr.push(res[i].role)
+      }
+   });
+};
+rolesArray();
+      
+      
+      
+// List of all Employees
+// ------------------------------------------------------------------------------------------------
+const queryEmployees = `SELECT employees.ID, CONCAT(employees.first_name," ", employees.last_name) AS employee,
                         roles.role, roles.salary, departments.department, 
                         CONCAT(manager.first_name, " ", manager.last_name) AS manager
                         FROM employees
-                        JOIN roles ON employees.role_id = roles.id
-                        JOIN departments ON departments.id = roles.departments_id
-                        JOIN employees AS manager ON employees.manager_id = manager.id`;
+                        JOIN roles ON employees.role_ID = roles.ID
+                        JOIN departments ON departments.ID = roles.departments_ID
+                        JOIN employees AS manager ON employees.manager_ID = manager.ID`;
 
-// const queryEmployeesDep = 
-
-// Arrays -----------------------------------------------------------------------------------------
-const departmentsArr = [];
-connection.query(`SELECT departments.department FROM departments`, (err, res) => {
-   if (err) throw err;
-   for (let i = 0; i < res.length; i++) {
-      departmentsArr.push(res[i].department)
-   }
-});
-
-
-// List of all Employees
-// ------------------------------------------------------------------------------------------------
 function viewEmployees() {
    connection.query(queryEmployees, (err, res) => {
       if (err) throw err;
@@ -176,8 +188,45 @@ function viewEmployeesDep() {
       type: "list",
       name: "chooseDep",
       message: "Choose Department: ",
-      choices: departmentsArr
-            
+      choices: departmentsArr      
+   })
+   .then(answer => {
+      connection.query(queryEmployeesDep, answer.chooseDep, (err, res) => { 
+         if (err) throw err;
+         console.table(res);
+         run();
+      });
    });
-   // run();
-}
+
+   queryEmployeesDep = `SELECT employees.ID, CONCAT(employees.first_name," ", employees.last_name) AS employee,
+                        roles.role, roles.salary, departments.department, 
+                        CONCAT(manager.first_name, " ", manager.last_name) AS manager
+                        FROM employees
+                        JOIN roles ON employees.role_ID = roles.ID
+                        JOIN departments ON departments.ID = roles.departments_ID
+                        JOIN employees AS manager ON employees.manager_ID = manager.ID
+                        WHERE departments.department = ?`; // ? = answer.chooseDep
+};
+
+
+// List of all Roles
+// ------------------------------------------------------------------------------------------------
+function viewRoles() {
+   const queryRoles = `SELECT ID, role, salary, departments_ID AS "department ID" FROM roles`;
+   connection.query(queryRoles, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      run();
+   });
+};
+
+// List of all Departments
+// ------------------------------------------------------------------------------------------------
+function viewDepartments() {
+   const queryDepartments = `SELECT ID, department FROM departments`;
+   connection.query(queryDepartments, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      run();
+   });
+};

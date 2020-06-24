@@ -25,7 +25,7 @@ VALUES ("CEO", 320000.00, 1),
       ("User Experience Interns", 25000.00, 4);
 
 INSERT INTO employees (first_name, last_name, role_id, manager_id)
-VALUES ("Percy", "'Sunrise' Parsons", 1, 0),
+VALUES ("Percy", "'Sunrise' Parsons", 1, 1),
       -- Creative Department
       ("Adam","'Con Artist' Medina", 2, 1),
       ("Oliver","'the Mute' Small", 3, 2),
