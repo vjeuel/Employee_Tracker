@@ -234,8 +234,6 @@ async function addEmp() {
 
    const roles = await connection.query(`SELECT DISTINCT role FROM roles`)
    console.log(roles);
-
-   // const newRoles = roles.map() 
    
 
    inquirer.prompt([{

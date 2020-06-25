@@ -6,7 +6,7 @@ VALUES ("CEO"),
       ("Strategy Department"), 
       ("User Experience Department");
 
-INSERT INTO roles (role, salary, departments_id)
+INSERT INTO roles (title, salary, departments_ID)
 VALUES ("CEO", 320000.00, 1),
       -- Creative Department
       ("Creative Director", 150000.00, 2),
@@ -24,7 +24,7 @@ VALUES ("CEO", 320000.00, 1),
       ("UxD Designer", 88000.00, 4),
       ("User Experience Interns", 25000.00, 4);
 
-INSERT INTO employees (first_name, last_name, role_id, manager_id)
+INSERT INTO employees (first_name, last_name, role_ID, manager_ID)
 VALUES ("Percy", "'Sunrise' Parsons", 1, 1),
       -- Creative Department
       ("Adam","'Con Artist' Medina", 2, 1),
