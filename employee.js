@@ -224,18 +224,24 @@ function addEmployee() {
       
    ])
       .then(answer => {
-         connection.query((`SELECT id FROM roles WHERE ?`, {name: answer.title}, (err, res) => {
+         connection.query(`SELECT id FROM roles WHERE title  = "${answer.title}"`, (err, res) => {
+         // connection.query(`SELECT id FROM roles WHERE ?`, { title: answer.title }, (err, res) => {
             if (err) throw err;
             const addRole = res[0].id;
-            console.log(addRole);         
 
-            const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", ${addRole}, "${answer.manager}")`;
-            connection.query(queryAddEmployee, err => {
+            connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.manager}"`, (err, res) => {
                if (err) throw err;
-               console.log("The new Employee is part of your team!");
-            })
-            run();
-         }));
+               const addMan = res[0].id;
+               console.log(addMan);
+
+               const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
+               connection.query(queryAddEmployee, err => {
+                  if (err) throw err;
+                  console.log("The new Employee is part of your team!");
+               })
+               run();
+            });
+         });
       });
 };
 
@@ -282,11 +288,8 @@ function addRole() {
                console.log("The Role has been added!");
                run();
             });
-         
          });
-
       });
-      
 };
 
 // List of all Departments
