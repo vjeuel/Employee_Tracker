@@ -37,7 +37,7 @@ var connection = mysql.createConnection({
    host: "localhost",
    port: 3306,
    user: "root",
-   password: "pizza123",
+   password: "",
    database: "employee_db"
 });
 
@@ -141,7 +141,7 @@ function run() {
 // mysql to Arrays ---------------------------------------------------------------------------------
 const departmentsArr = [];
 function depArray() {
-   connection.query(`SELECT department FROM departments`, (err, res) => {
+   connection.query(`SELECT department, id FROM departments`, (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
          departmentsArr.push(res[i].department)
@@ -152,7 +152,7 @@ depArray();
       
 const rolesArr = [];
 function rolesArray() {
-   connection.query(`SELECT title FROM roles`, (err, res) => {
+   connection.query(`SELECT id, title FROM roles`, (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
          rolesArr.push(res[i].title)
@@ -165,7 +165,7 @@ const managersArr = [];
 function managersArray() {
    connection.query(`SELECT DISTINCT CONCAT (manager.first_name, " ", manager.last_name) AS manager
                      FROM employees
-                     JOIN employees AS manager ON manager.ID = employees.manager_ID`, (err, res) => {
+                     JOIN employees AS manager ON manager.id = employees.manager_id`, (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
          managersArr.push(res[i].manager)
@@ -178,13 +178,13 @@ managersArray();
       
 // List of all Employees
 // ------------------------------------------------------------------------------------------------
-const queryEmployees = `SELECT employees.ID, CONCAT(employees.first_name," ", employees.last_name) AS employee,
+const queryEmployees = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
 roles.title, roles.salary, departments.department, 
 CONCAT(manager.first_name, " ", manager.last_name) AS manager
 FROM employees
-JOIN roles ON employees.role_ID = roles.ID
-JOIN departments ON departments.ID = roles.departments_ID
-JOIN employees AS manager ON employees.manager_ID = manager.ID`;
+JOIN roles ON employees.role_id = roles.id
+JOIN departments ON departments.id = roles.departments_id
+JOIN employees AS manager ON employees.manager_id = manager.id`;
 
 function viewEmployees() {
    connection.query(queryEmployees, (err, res) => {
@@ -223,75 +223,26 @@ function addEmployee() {
       }
       
    ])
-   .then(answer => {
-      const queryAddEmployee = `INSERT INTO employees SET first_name = '${answer.first_name}', last_name = '${answer.last_name}', role_ID = '${answer.title}', manager_ID = '${answer.manager}'`
-      connection.query(queryAddEmployee, err  => {
-         if (err) throw err;
-         console.log("Employee is part of your team!");
-         run();
-      })
-   })
-}
-// [answer.first_name, answer.last_name, answer.title, answer.manager], 
-// /*, answer.role, answer.manager */
+      .then(answer => {
+         connection.query((`SELECT id FROM roles WHERE ?`, {name: answer.title}, (err, res) => {
+            if (err) throw err;
+            const addRole = res[0].id;
+            console.log(addRole);         
 
-// List of all Employees by Department
-// ------------------------------------------------------------------------------------------------
-// queryEmployeesDep = `SELECT employees.ID, CONCAT(employees.first_name," ", employees.last_name) AS employee,
-//                      roles.title, roles.salary, departments.department, 
-//                      CONCAT(manager.first_name, " ", manager.last_name) AS manager
-//                      FROM employees
-//                      JOIN roles ON employees.role_ID = roles.ID
-//                      JOIN departments ON departments.ID = roles.departments_ID
-//                      JOIN employees AS manager ON employees.manager_ID = manager.ID
-//                      WHERE departments.department = ?`; // ? = answer.chooseDep
-
-// function viewEmployeesDep() {
-//    inquirer.prompt({
-//       type: "list",
-//       name: "chooseDep",
-//       message: "Choose Department: ",
-//       choices: departmentsArr      
-//    })
-//    .then(answer => {
-//       connection.query(queryEmployeesDep, answer.chooseDep, (err, res) => { 
-//          if (err) throw err;
-//          console.table(res);
-//          run();
-//       });
-//    });
-// };
-
-// List of all Employees by Manager
-// ------------------------------------------------------------------------------------------------
-// queryEmployeesMan = `SELECT employees.ID, CONCAT(employees.first_name," ", employees.last_name) AS employee,
-//                      roles.title, roles.salary, departments.department AS department 
-//                      FROM employees 
-//                      JOIN roles ON employees.role_ID = roles.ID 
-//                      JOIN departments ON departments.ID = roles.departments_ID
-//                      JOIN employees AS manager ON manager.ID = employees.manager_ID
-//                      WHERE CONCAT(employees.first_name, " ", employees.last_name) = ?`; // ? = answer.chooseMan
-
-// function viewEmployeesMan() {
-//    inquirer.prompt({
-//       type: "list",
-//       name: "chooseMan",
-//       message: "Choose Manager: ",
-//       choices: managersArr
-//    })
-//    .then(answer => {
-//       connection.query(queryEmployeesMan, answer.chooseMan, (err, res) => { 
-//          if (err) throw err;
-//          console.table(res);
-//          run();
-//       });
-//    });
-// };
+            const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", ${addRole}, "${answer.manager}")`;
+            connection.query(queryAddEmployee, err => {
+               if (err) throw err;
+               console.log("The new Employee is part of your team!");
+            })
+            run();
+         }));
+      });
+};
 
 // List of all Roles
 // ------------------------------------------------------------------------------------------------
 function viewRoles() {
-   const queryRoles = `SELECT ID, title, salary, departments_ID AS "department ID" FROM roles`;
+   const queryRoles = `SELECT id, title, salary, departments_id AS "department id" FROM roles`;
    connection.query(queryRoles, (err, res) => {
       if (err) throw err;
       console.table(res);
@@ -317,24 +268,31 @@ function addRole() {
          type: "list",
          name: "department",
          message: "Choose a Department for the Role to be added to",
-         choices: departmentsArr
+         choices: departmentsArr // Need to call ids from here, associate 
       }
    ])
-   .then(answer => {
-      let queryAddRole = `INSERT INTO roles (title, salary, departments_ID) VALUES title = '${answer.addRole}', salary = '${answer.salary}', departments_ID = '${answer.department}`;
-         connection.query(queryAddRole, err => {
+      .then(answer => {
+         connection.query(`SELECT id FROM departments WHERE ?`, { department: answer.department }, (err, res) => {
             if (err) throw err;
-            console.log("The Role has been added!");
-            run();
+            const addDep = res[0].id;
+  
+            const queryAddRole = `INSERT INTO roles (title, salary, departments_id) VALUES ("${answer.addRole}", "${answer.salary}", "${addDep}")`;
+            connection.query(queryAddRole, err => {
+               if (err) throw err;
+               console.log("The Role has been added!");
+               run();
+            });
+         
          });
-      
+
       });
+      
 };
 
 // List of all Departments
 // ------------------------------------------------------------------------------------------------
 function viewDepartments() {
-   const queryDepartments = `SELECT ID, department FROM departments`;
+   const queryDepartments = `SELECT id, department FROM departments`;
    connection.query(queryDepartments, (err, res) => {
       if (err) throw err;
       console.table(res);
