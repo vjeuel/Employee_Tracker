@@ -52,22 +52,21 @@ function run() {
       type: "list",
       message: "What would you like to do?",
       choices: [
-         "View all Employees", // DONE
-         // "View all Employees By Department", //DONE // EXTRA
-         // "View all Employees By Manager",
+         "View all Employees",
          "Add Employee",
-         // "Remove Employee",
          "Update Employee's Role",
-         // "Update Employee's Manager",
          // -----------------------------------
-         "View Roles", // DONE
+         "View Roles",
          "Add Role",
-         // "Remove Role",
          // -----------------------------------
-         "View Departments", //DONE
+         "View Departments",
          "Add Department",
-         // "Remove Department",
          // -----------------------------------
+         // "View all Employees By Manager",
+         // "Remove Employee",
+         // "Update Employee's Manager",
+         // "Remove Role",
+         // "Remove Department",
          // "View the total utilized budget of a department",
          // -----------------------------------
          "Exit"
@@ -75,59 +74,56 @@ function run() {
    })
       .then(answer => {
          switch (answer.general) {
-            case "View all Employees": // DONE
-               viewEmployees();
-               break;
-
-            // case "View all Employees By Department": // DONE // Extra
-            //    viewEmployeesDep();
-            //    break;
-            
-            // case "View all Employees By Manager": // BONUS
-            //    viewEmployeesMan();
-            //    break;
+            case "View all Employees":
+            viewEmployees();
+            break;
             
             case "Add Employee":
-               addEmployee();
-               break;
-               
-            // case "Remove Employee": // BONUS
-            //    remEmp();
-            //    break;
-               
-            case "Update Employee's Role":
-               updateEmployeeRole();
-               break;
-               
-            // case "Update Employee's Manager": // BONUS
-            //    updEmpMan();
-            //    break;
-               
-            case "View Roles": // DONE
+            addEmployee();
+            break;
+            
+            case "Update Employee's Role": 
+            updateEmployeeRole();
+            break;
+            
+            case "View Roles":
             viewRoles();
             break;
             
             case "Add Role":
             addRole();
             break;
-               
-            // case "Remove Role": // BONUS
-            //    remRole();
-            //    break;
-               
-            case "View Departments": // DONE
+            
+            case "View Departments":
             viewDepartments();
             break;
             
-            case "Add Department": // DONE
+            case "Add Department":
             addDepartment();
             break;
+            
+            // Bonus --------------------------------------------------------------------------------
+            // case "Remove Role":
+            //    remRole();
+            //    break;
+            
+            // case "Update Employee's Manager":
+            //    updEmpMan();
+            //    break;
+            
+            // case "Remove Employee":
+            //    remEmp();
+            //    break;
+            
+            // case "View all Employees By Manager":
+            //    viewEmployeesMan();
+            //    break;
                
-            // case "Remove Department": // BONUS
+            // case "Remove Department":
             //    remDep();
             //    break;
                
-            // case "View the total utilized budget of a department": // BONUS
+            // case "View the total utilized budget of a department":
             //    viewTotBudget();
             //    break;
                
@@ -173,8 +169,17 @@ function managersArray() {
    });
 };
 managersArray();
-      
-      
+
+const employeesArr = [];
+function employeesArray() {
+   connection.query('SELECT CONCAT(first_name, " ", last_name) AS employee FROM employees', (err, res) => {
+      if (err) throw err;
+      for (let i = 0; i < res.length; i++) {
+         employeesArr.push(res[i].employee)
+      }
+   });
+};
+employeesArray();
       
 // List of all Employees
 // ------------------------------------------------------------------------------------------------
@@ -196,7 +201,6 @@ function viewEmployees() {
 
 // Add Employees
 // ------------------------------------------------------------------------------------------------
-
 function addEmployee() {
    inquirer.prompt([
       {
@@ -221,18 +225,15 @@ function addEmployee() {
          message: "Choose Manager for this Employee",
          choices: managersArr
       }
-      
    ])
       .then(answer => {
-         connection.query(`SELECT id FROM roles WHERE title  = "${answer.title}"`, (err, res) => {
-         // connection.query(`SELECT id FROM roles WHERE ?`, { title: answer.title }, (err, res) => {
+         connection.query(`SELECT id FROM roles WHERE title = "${answer.title}"`, (err, res) => {
             if (err) throw err;
             const addRole = res[0].id;
 
             connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.manager}"`, (err, res) => {
                if (err) throw err;
                const addMan = res[0].id;
-               console.log(addMan);
 
                const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
                connection.query(queryAddEmployee, err => {
@@ -274,20 +275,67 @@ function addRole() {
          type: "list",
          name: "department",
          message: "Choose a Department for the Role to be added to",
-         choices: departmentsArr // Need to call ids from here, associate 
+         choices: departmentsArr
+      }
+   ])
+   .then(answer => {
+      connection.query(`SELECT id FROM departments WHERE ?`, { department: answer.department }, (err, res) => {
+         if (err) throw err;
+         const addDep = res[0].id;
+         
+         const queryAddRole = `INSERT INTO roles (title, salary, departments_id) VALUES ("${answer.addRole}", "${answer.salary}", "${addDep}")`;
+         connection.query(queryAddRole, err => {
+            if (err) throw err;
+            console.log("The Role has been added!");
+            run();
+         });
+      });
+   });
+};
+
+// Update Employee's Role
+// ------------------------------------------------------------------------------------------------
+function updateEmployeeRole() {
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "chooseEmp",
+         message: "Choose an Employee to be updated",
+         choices: employeesArr,
+      },
+      {
+         name: "list",
+         name: "chooseRole",
+         message: "Choose a new Role",
+         choices: rolesArr,
+      },
+      {
+         name: "list",
+         name: "chooseMan",
+         message: "Choose new Manager",
+         choices: managersArr,
       }
    ])
       .then(answer => {
-         connection.query(`SELECT id FROM departments WHERE ?`, { department: answer.department }, (err, res) => {
+         console.log(employeesArr);
+         console.log(rolesArr);
+         console.log(managersArr);
+         
+         connection.query(`SELECT id FROM roles WHERE title = "${answer.chooseRole}"`, (err, res) => {
             if (err) throw err;
-            const addDep = res[0].id;
-  
-            const queryAddRole = `INSERT INTO roles (title, salary, departments_id) VALUES ("${answer.addRole}", "${answer.salary}", "${addDep}")`;
-            connection.query(queryAddRole, err => {
+            const chosenRole = res[0].id;
+
+            connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.chooseMan}"`, (err, res) => {
                if (err) throw err;
-               console.log("The Role has been added!");
-               run();
+               const chosenMan = res[0].id;
+            
+               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan}, WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}")`, err => {
+                  if (err) throw err;
+                  console.log("The Employee has been updated!");
+               })
+               // run();
             });
+      
          });
       });
 };
