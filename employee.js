@@ -3,37 +3,59 @@ const inquirer = require("inquirer");
 const CFonts = require('cfonts');
 require("console.table");
 
-CFonts.say('COWBOY|ad agency', {
-   font: 'block',                // define the font face
-   align: 'center',              // define text alignment
-   colors: ['yellow', 'black'],  // define all colors
-   background: 'redBright',      // define the background color, you can also use `backgroundColor` here as key
-   letterSpacing: 2,             // define letter spacing
-   lineHeight: 0,                // define the line height
-   space: true,                  // define if the output text should have empty lines on top and on the bottom
-   maxLength: '0',               // define how many character can be on one line
-   gradient: true,               // define your two gradient colors
-   independentGradient: false,   // define if you want to recalculate the gradient for each new line
-   transitionGradient: false,    // define if this is a transition between colors directly
-   env: 'node'                   // define the environment CFonts is being executed in
-});
+function start() {
+   function logo() {  
+      CFonts.say('COWBOY|ad agency', {
+         font: 'block',                // define the font face
+         align: 'center',              // define text alignment
+         colors: ['yellow', 'red'],    // define all colors
+         background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+         env: 'node'                   // define the environment CFonts is being executed in
+      });
+   };
+   
+   setTimeout(() => {
+   logo();
+   }, 1500);
+   
+   console.clear();
+   function howdy() {
+      CFonts.say('HOWDY|welcome to', {
+         font: 'chrome',               // define the font face
+         align: 'center',              // define text alignment
+         colors: ['yellow',
+                   'yellow',
+                  'yellow'],           // define all colors
+         background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+         env: 'node'                   // define the environment CFonts is being executed in
+      });
+   }
+   howdy();      
+   };
 
-CFonts.say('EMPLOYEE TRACKER', {
-   font: 'chrome',               // define the font face
-   align: 'center',              // define text alignment
-   colors: ['yellow',
-            'yellow',
-            'yellow'],           // define all colors
-   background: 'transparent',          // define the background color, you can also use `backgroundColor` here as key
-   letterSpacing: 2,             // define letter spacing
-   lineHeight: 0,                // define the line height
-   space: true,                  // define if the output text should have empty lines on top and on the bottom
-   maxLength: '0',               // define how many character can be on one line
-   gradient: true,               // define your two gradient colors
-   independentGradient: false,   // define if you want to recalculate the gradient for each new line
-   transitionGradient: false,    // define if this is a transition between colors directly
-   env: 'node'                   // define the environment CFonts is being executed in
-});
+function banner() {
+   CFonts.say('EMPLOYEE TRACKER', {
+      font: 'chrome',               // define the font face
+      align: 'center',              // define text alignment
+      colors: ['yellow',
+      'yellow',
+      'yellow'],                    // define all colors
+      background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+      env: 'node'                   // define the environment CFonts is being executed in
+   });
+}
+
+function message(note) {
+   CFonts.say(note, {
+      font: 'chrome',               // define the font face
+      align: 'center',              // define text alignment
+      colors: ['yellow',
+      'yellow',
+      'yellow'],                    // define all colors
+      background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+      env: 'node'                   // define the environment CFonts is being executed in
+   });
+}
 
 var connection = mysql.createConnection({
    host: "localhost",
@@ -43,9 +65,13 @@ var connection = mysql.createConnection({
    database: "employee_db"
 });
 
-connection.connect(function(err) {
-  if (err) throw err;
-  run();
+connection.connect(function (err) {
+   if (err) throw err;
+   start();
+   setTimeout(() => {
+      run();
+      
+   }, 3000);
 });
 
 function run() {
@@ -195,6 +221,8 @@ JOIN departments ON departments.id = roles.departments_id
 JOIN employees AS manager ON employees.manager_id = manager.id`;
 
 function viewEmployees() {
+   console.clear();
+   banner();
    connection.query(queryEmployees, (err, res) => {
       if (err) throw err;
       console.table(res);
@@ -205,6 +233,8 @@ function viewEmployees() {
 // Add Employees
 // ------------------------------------------------------------------------------------------------
 function addEmployee() {
+   console.clear();
+   banner();
    inquirer.prompt([
       {
          type: "input",
@@ -229,29 +259,31 @@ function addEmployee() {
          choices: managersArr
       }
    ])
-      .then(answer => {
-         connection.query(`SELECT id FROM roles WHERE title = "${answer.title}"`, (err, res) => {
+   .then(answer => {
+      connection.query(`SELECT id FROM roles WHERE title = "${answer.title}"`, (err, res) => {
+         if (err) throw err;
+         const addRole = res[0].id;
+
+         connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.manager}"`, (err, res) => {
             if (err) throw err;
-            const addRole = res[0].id;
-
-            connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.manager}"`, (err, res) => {
+            const addMan = res[0].id;
+            
+            const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
+            connection.query(queryAddEmployee, err => {
                if (err) throw err;
-               const addMan = res[0].id;
-
-               const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
-               connection.query(queryAddEmployee, err => {
-                  if (err) throw err;
-                  console.log("The new Employee is part of your team!");
-               })
+               message("EMPLOYEE ADDED");
                run();
-            });
+            })
          });
       });
+   });
 };
 
 // List of all Roles
 // ------------------------------------------------------------------------------------------------
 function viewRoles() {
+   console.clear();
+   banner();
    const queryRoles = `SELECT id, title, salary, departments_id AS "department id" FROM roles`;
    connection.query(queryRoles, (err, res) => {
       if (err) throw err;
@@ -263,6 +295,8 @@ function viewRoles() {
 // Add Role
 // ------------------------------------------------------------------------------------------------
 function addRole() {
+   console.clear();
+   banner();
    inquirer.prompt([
       {
          type: "input",
@@ -282,14 +316,14 @@ function addRole() {
       }
    ])
    .then(answer => {
-      connection.query(`SELECT id FROM departments WHERE ?`, { department: answer.department }, (err, res) => {
+      connection.query(`SELECT id FROM departments WHERE department = "${answer.department}"`, (err, res) => {
          if (err) throw err;
-         const addDep = res[0].id;
+         let addDep = res[0].id;
          
-         const queryAddRole = `INSERT INTO roles (title, salary, departments_id) VALUES ("${answer.addRole}", "${answer.salary}", "${addDep}")`;
+         let queryAddRole = `INSERT INTO roles SET title = "${answer.addRole}", salary = "${answer.salary}", departments_id = "${addDep}"`;
          connection.query(queryAddRole, err => {
             if (err) throw err;
-            console.log("The Role has been added!");
+            message("ROLE ADDED");
             run();
          });
       });
@@ -298,7 +332,9 @@ function addRole() {
 
 // Update Employee's Role
 // ------------------------------------------------------------------------------------------------
-async function updateEmployeeRole() {
+function updateEmployeeRole() {
+   console.clear();
+   banner();
    inquirer.prompt([
       {
          type: "list",
@@ -330,9 +366,9 @@ async function updateEmployeeRole() {
             
                connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
                   if (err) throw err;
-                  console.log("The Employee has been updated!");
+                  message("EMPLOYEE UPDATED");
+                  run();
                })
-               run();
             });
       
          });
@@ -342,7 +378,9 @@ async function updateEmployeeRole() {
 // List of all Departments
 // ------------------------------------------------------------------------------------------------
 function viewDepartments() {
-   const queryDepartments = `SELECT id, department FROM departments`;
+   console.clear();
+   banner();
+   const queryDepartments = `SELECT * FROM departments`;
    connection.query(queryDepartments, (err, res) => {
       if (err) throw err;
       console.table(res);
@@ -350,9 +388,10 @@ function viewDepartments() {
    });
 };
 
-// List of all Departments
+// Add a Department
 // ------------------------------------------------------------------------------------------------
 function addDepartment() {
+   console.clear();
    inquirer.prompt([
       {
          type: "input",
@@ -361,19 +400,19 @@ function addDepartment() {
       }
    ])
    .then(answer => {
-      const queryAddDep = `INSERT INTO departments SET department = '${answer.addDepartment}'`;
+      let queryAddDep = `INSERT INTO departments SET department = '${answer.addDepartment}'`;
       connection.query(queryAddDep, err => {
          if (err) throw err;
-         console.log("The Department has been added!");
+         message("DEPARTMENT ADDED");
          run();
       });
-      
    });
 };
 
 // Exit
 // ------------------------------------------------------------------------------------------------
 function exit() {
+   console.clear();
    CFonts.say('SEE YAH AROUND', {
       font: 'chrome',               // define the font face
       align: 'center',              // define text alignment
@@ -381,13 +420,6 @@ function exit() {
                'yellow',
                'yellow'],           // define all colors
       background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
-      letterSpacing: 2,             // define letter spacing
-      lineHeight: 0,                // define the line height
-      space: true,                  // define if the output text should have empty lines on top and on the bottom
-      maxLength: '0',               // define how many character can be on one line
-      gradient: true,               // define your two gradient colors
-      independentGradient: false,   // define if you want to recalculate the gradient for each new line
-      transitionGradient: false,    // define if this is a transition between colors directly
       env: 'node'                   // define the environment CFonts is being executed in
    });  
-}
+};
