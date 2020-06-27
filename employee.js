@@ -19,10 +19,12 @@ CFonts.say('COWBOY|ad agency', {
 });
 
 CFonts.say('EMPLOYEE TRACKER', {
-   font: 'tiny',                 // define the font face
+   font: 'chrome',               // define the font face
    align: 'center',              // define text alignment
-   colors: ['white'],            // define all colors
-   background: 'black',          // define the background color, you can also use `backgroundColor` here as key
+   colors: ['yellow',
+            'yellow',
+            'yellow'],           // define all colors
+   background: 'transparent',          // define the background color, you can also use `backgroundColor` here as key
    letterSpacing: 2,             // define letter spacing
    lineHeight: 0,                // define the line height
    space: true,                  // define if the output text should have empty lines on top and on the bottom
@@ -75,32 +77,32 @@ function run() {
       .then(answer => {
          switch (answer.general) {
             case "View all Employees":
-            viewEmployees();
-            break;
+               viewEmployees();
+               break;
             
             case "Add Employee":
-            addEmployee();
-            break;
+               addEmployee();
+               break;
             
             case "Update Employee's Role": 
-            updateEmployeeRole();
-            break;
+               updateEmployeeRole();
+               break;
             
             case "View Roles":
-            viewRoles();
-            break;
+               viewRoles();
+               break;
             
             case "Add Role":
-            addRole();
-            break;
+              addRole();
+               break;
             
             case "View Departments":
-            viewDepartments();
-            break;
+               viewDepartments();
+               break;
             
             case "Add Department":
-            addDepartment();
-            break;
+               addDepartment();
+               break;
             
             // Bonus --------------------------------------------------------------------------------
             // case "Remove Role":
@@ -128,10 +130,11 @@ function run() {
             //    break;
                
             case "Exit":
+               exit();
                connection.end();
                break;
-               };
-            });
+         };
+      });
 };
 
 // mysql to Arrays ---------------------------------------------------------------------------------
@@ -295,32 +298,28 @@ function addRole() {
 
 // Update Employee's Role
 // ------------------------------------------------------------------------------------------------
-function updateEmployeeRole() {
+async function updateEmployeeRole() {
    inquirer.prompt([
       {
          type: "list",
          name: "chooseEmp",
          message: "Choose an Employee to be updated",
-         choices: employeesArr,
+         choices: employeesArr
       },
       {
-         name: "list",
+         type: "list",
          name: "chooseRole",
          message: "Choose a new Role",
-         choices: rolesArr,
+         choices: rolesArr
       },
       {
-         name: "list",
+         type: "list",
          name: "chooseMan",
          message: "Choose new Manager",
-         choices: managersArr,
+         choices: managersArr
       }
    ])
       .then(answer => {
-         console.log(employeesArr);
-         console.log(rolesArr);
-         console.log(managersArr);
-         
          connection.query(`SELECT id FROM roles WHERE title = "${answer.chooseRole}"`, (err, res) => {
             if (err) throw err;
             const chosenRole = res[0].id;
@@ -329,11 +328,11 @@ function updateEmployeeRole() {
                if (err) throw err;
                const chosenMan = res[0].id;
             
-               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan}, WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}")`, err => {
+               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
                   if (err) throw err;
                   console.log("The Employee has been updated!");
                })
-               // run();
+               run();
             });
       
          });
@@ -363,11 +362,32 @@ function addDepartment() {
    ])
    .then(answer => {
       const queryAddDep = `INSERT INTO departments SET department = '${answer.addDepartment}'`;
-         connection.query(queryAddDep, err => {
-            if (err) throw err;
-            console.log("The Department has been added!");
-            run();
-         });
-      
+      connection.query(queryAddDep, err => {
+         if (err) throw err;
+         console.log("The Department has been added!");
+         run();
       });
+      
+   });
 };
+
+// Exit
+// ------------------------------------------------------------------------------------------------
+function exit() {
+   CFonts.say('SEE YAH AROUND', {
+      font: 'chrome',               // define the font face
+      align: 'center',              // define text alignment
+      colors: ['yellow',
+               'yellow',
+               'yellow'],           // define all colors
+      background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+      letterSpacing: 2,             // define letter spacing
+      lineHeight: 0,                // define the line height
+      space: true,                  // define if the output text should have empty lines on top and on the bottom
+      maxLength: '0',               // define how many character can be on one line
+      gradient: true,               // define your two gradient colors
+      independentGradient: false,   // define if you want to recalculate the gradient for each new line
+      transitionGradient: false,    // define if this is a transition between colors directly
+      env: 'node'                   // define the environment CFonts is being executed in
+   });  
+}
