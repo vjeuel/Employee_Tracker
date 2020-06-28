@@ -20,11 +20,10 @@ function start() {
    
    console.clear();
    function howdy() {
-      CFonts.say('HOWDY|welcome to', {
+      CFonts.say('HOWDY,|welcome to', {
          font: 'chrome',               // define the font face
          align: 'center',              // define text alignment
-         colors: ['yellow',
-                   'yellow',
+         colors: ['yellow','yellow',
                   'yellow'],           // define all colors
          background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
          env: 'node'                   // define the environment CFonts is being executed in
@@ -37,9 +36,8 @@ function banner() {
    CFonts.say('EMPLOYEE TRACKER', {
       font: 'chrome',               // define the font face
       align: 'center',              // define text alignment
-      colors: ['yellow',
-      'yellow',
-      'yellow'],                    // define all colors
+      colors: ['yellow', 'yellow',
+               'yellow'],           // define all colors
       background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
       env: 'node'                   // define the environment CFonts is being executed in
    });
@@ -49,9 +47,8 @@ function message(note) {
    CFonts.say(note, {
       font: 'chrome',               // define the font face
       align: 'center',              // define text alignment
-      colors: ['yellow',
-      'yellow',
-      'yellow'],                    // define all colors
+      colors: ['yellow', 'yellow',
+               'yellow'],           // define all colors
       background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
       env: 'node'                   // define the environment CFonts is being executed in
    });
@@ -69,12 +66,14 @@ connection.connect(function (err) {
    if (err) throw err;
    start();
    setTimeout(() => {
-      run();
-      
+      run();   
    }, 3000);
 });
 
 function run() {
+   depArray();
+   employeesArray();
+   rolesArray();
    inquirer.prompt({
       name: "general",
       type: "list",
@@ -164,8 +163,9 @@ function run() {
 };
 
 // mysql to Arrays ---------------------------------------------------------------------------------
-const departmentsArr = [];
+let departmentsArr = [];
 function depArray() {
+   departmentsArr = [];
    connection.query(`SELECT department, id FROM departments`, (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
@@ -173,10 +173,10 @@ function depArray() {
       }
    });
 };
-depArray();
       
-const rolesArr = [];
+let rolesArr = [];
 function rolesArray() {
+   rolesArr = [];
    connection.query(`SELECT id, title FROM roles`, (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
@@ -184,23 +184,10 @@ function rolesArray() {
       }
    });
 };
-rolesArray();
-      
-const managersArr = [];
-function managersArray() {
-   connection.query(`SELECT DISTINCT CONCAT (manager.first_name, " ", manager.last_name) AS manager
-                     FROM employees
-                     JOIN employees AS manager ON manager.id = employees.manager_id`, (err, res) => {
-      if (err) throw err;
-      for (let i = 0; i < res.length; i++) {
-         managersArr.push(res[i].manager)
-      }
-   });
-};
-managersArray();
 
-const employeesArr = [];
+let employeesArr = [];
 function employeesArray() {
+   // employeesArr = [];
    connection.query('SELECT CONCAT(first_name, " ", last_name) AS employee FROM employees', (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
@@ -208,17 +195,16 @@ function employeesArray() {
       }
    });
 };
-employeesArray();
       
 // List of all Employees
 // ------------------------------------------------------------------------------------------------
 const queryEmployees = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
-roles.title, roles.salary, departments.department, 
-CONCAT(manager.first_name, " ", manager.last_name) AS manager
-FROM employees
-JOIN roles ON employees.role_id = roles.id
-JOIN departments ON departments.id = roles.departments_id
-JOIN employees AS manager ON employees.manager_id = manager.id`;
+                        roles.title, roles.salary, departments.department, 
+                        CONCAT(manager.first_name, " ", manager.last_name) AS manager
+                        FROM employees
+                        JOIN roles ON employees.role_id = roles.id
+                        JOIN departments ON departments.id = roles.departments_id
+                        JOIN employees AS manager ON employees.manager_id = manager.id`;
 
 function viewEmployees() {
    console.clear();
@@ -233,6 +219,7 @@ function viewEmployees() {
 // Add Employees
 // ------------------------------------------------------------------------------------------------
 function addEmployee() {
+   rolesArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -256,7 +243,7 @@ function addEmployee() {
          type: "list",
          name: "manager",
          message: "Choose Manager for this Employee",
-         choices: managersArr
+         choices: employeesArr
       }
    ])
    .then(answer => {
@@ -268,7 +255,9 @@ function addEmployee() {
             if (err) throw err;
             const addMan = res[0].id;
             
-            const queryAddEmployee = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
+            const queryAddEmployee = 
+            `INSERT INTO employees (first_name, last_name, role_id, manager_id) 
+            VALUES ("${answer.first_name}", "${answer.last_name}", "${addRole}", "${addMan}")`;
             connection.query(queryAddEmployee, err => {
                if (err) throw err;
                message("EMPLOYEE ADDED");
@@ -284,7 +273,7 @@ function addEmployee() {
 function viewRoles() {
    console.clear();
    banner();
-   const queryRoles = `SELECT id, title, salary, departments_id AS "department id" FROM roles`;
+   const queryRoles = `SELECT roles.id, roles.title, roles.salary, departments.department FROM roles JOIN departments ON roles.departments_id = departments.id`; 
    connection.query(queryRoles, (err, res) => {
       if (err) throw err;
       console.table(res);
@@ -295,6 +284,7 @@ function viewRoles() {
 // Add Role
 // ------------------------------------------------------------------------------------------------
 function addRole() {
+   depArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -352,7 +342,7 @@ function updateEmployeeRole() {
          type: "list",
          name: "chooseMan",
          message: "Choose new Manager",
-         choices: managersArr
+         choices: employeesArr
       }
    ])
       .then(answer => {
@@ -364,7 +354,8 @@ function updateEmployeeRole() {
                if (err) throw err;
                const chosenMan = res[0].id;
             
-               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
+               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} 
+                                 WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
                   if (err) throw err;
                   message("EMPLOYEE UPDATED");
                   run();
@@ -413,11 +404,10 @@ function addDepartment() {
 // ------------------------------------------------------------------------------------------------
 function exit() {
    console.clear();
-   CFonts.say('SEE YAH AROUND', {
+   CFonts.say("SEE Y'ALL AROUND", {
       font: 'chrome',               // define the font face
       align: 'center',              // define text alignment
-      colors: ['yellow',
-               'yellow',
+      colors: ['yellow','yellow',
                'yellow'],           // define all colors
       background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
       env: 'node'                   // define the environment CFonts is being executed in
