@@ -2,7 +2,7 @@
 <h1 align="center">Employee Tracker</h1>
 
 <p align="center">
-  <img src="logo.png" height="100%">
+  <img src="logo.png" height="240px" width="1000px">
 </p>
 
 
