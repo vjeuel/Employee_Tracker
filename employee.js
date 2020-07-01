@@ -80,6 +80,7 @@ function run() {
       message: "What would you like to do?",
       choices: [
          "View all Employees",
+         "View all Employees By Manager",
          "Add Employee",
          "Update Employee's Role",
          "Remove Employee",
@@ -92,66 +93,64 @@ function run() {
          "Add Department",
          "Remove Department",
          // -----------------------------------
-         // "View all Employees By Manager",
          // "Update Employee's Manager",
          // "View the total utilized budget of a department",
          // -----------------------------------
          "Exit"
       ]
    })
-      .then(answer => {
-         switch (answer.general) {
-            case "View all Employees":
-               viewEmployees();
-               break;
+   .then(answer => {
+      switch (answer.general) {
+         case "View all Employees":
+            viewEmployees();
+            break;
             
-            case "Add Employee":
-               addEmployee();
-               break;
+         case "View all Employees By Manager":
+            viewEmployeesMan();
+            break;
+      
+         case "Add Employee":
+            addEmployee();
+            break;
+         
+         case "Update Employee's Role": 
+            updateEmployeeRole();
+            break;
+         
+         case "Remove Employee":
+            remEmp();
+            break;
+         
+         case "View Roles":
+            viewRoles();
+            break;
+         
+         case "Add Role":
+            addRole();
+            break;
             
-            case "Update Employee's Role": 
-               updateEmployeeRole();
-               break;
+         case "Remove Role":
+            remRole();
+            break;
+         
+         case "View Departments":
+            viewDepartments();
+            break;
+         
+         case "Add Department":
+            addDepartment();
+            break;
             
-            case "Remove Employee":
-               remEmp();
-               break;
-            
-            case "View Roles":
-               viewRoles();
-               break;
-            
-            case "Add Role":
-              addRole();
-               break;
-               
-            case "Remove Role":
-               remRole();
-               break;
-            
-            case "View Departments":
-               viewDepartments();
-               break;
-            
-            case "Add Department":
-               addDepartment();
-               break;
-               
-            case "Remove Department":
-               remDep();
-               break;
+         case "Remove Department":
+            remDep();
+            break;
                
             // Bonus --------------------------------------------------------------------------------
             
             // case "Update Employee's Manager":
             //    updEmpMan();
             //    break;
-            
-            
-            // case "View all Employees By Manager":
-            //    viewEmployeesMan();
-            //    break;
-               
+                  
             // case "View the total utilized budget of a department":
             //    viewTotBudget();
             //    break;
@@ -217,6 +216,25 @@ function viewEmployees() {
       run();
    });
 };
+
+// View all Employees by Manager
+// ------------------------------------------------------------------------------------------------
+const queryEmployeesMan = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
+                           roles.title, employees.manager_id, CONCAT(manager.first_name, " ", manager.last_name) AS manager
+                           FROM employees
+                           JOIN roles ON employees.role_id = roles.id
+                           JOIN employees AS manager ON employees.manager_id = manager.id
+                           ORDER BY manager_id;`;
+
+function viewEmployeesMan() {
+   console.clear();
+   banner();
+   connection.query(queryEmployeesMan, (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      run();
+   })
+}
 
 // Add Employees
 // ------------------------------------------------------------------------------------------------
@@ -419,8 +437,7 @@ function remRole() {
 function viewDepartments() {
    console.clear();
    banner();
-   const queryDepartments = `SELECT * FROM departments`;
-   connection.query(queryDepartments, (err, res) => {
+   connection.query(`SELECT * FROM departments;`, (err, res) => {
       if (err) throw err;
       console.table(res);
       run();
@@ -440,8 +457,7 @@ function addDepartment() {
       }
    ])
    .then(answer => {
-      let queryAddDep = `INSERT INTO departments SET department = '${answer.addDepartment}'`;
-      connection.query(queryAddDep, err => {
+      connection.query(`INSERT INTO departments SET department = '${answer.addDepartment}';`, err => {
          if (err) throw err;
          message("DEPARTMENT ADDED");
          run();
