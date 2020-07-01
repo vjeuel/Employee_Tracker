@@ -82,18 +82,18 @@ function run() {
          "View all Employees",
          "Add Employee",
          "Update Employee's Role",
+         "Remove Employee",
          // -----------------------------------
          "View Roles",
          "Add Role",
+         "Remove Role",
          // -----------------------------------
          "View Departments",
          "Add Department",
+         "Remove Department",
          // -----------------------------------
          // "View all Employees By Manager",
-         // "Remove Employee",
          // "Update Employee's Manager",
-         "Remove Role",
-         "Remove Department",
          // "View the total utilized budget of a department",
          // -----------------------------------
          "Exit"
@@ -113,12 +113,20 @@ function run() {
                updateEmployeeRole();
                break;
             
+            case "Remove Employee":
+               remEmp();
+               break;
+            
             case "View Roles":
                viewRoles();
                break;
             
             case "Add Role":
               addRole();
+               break;
+               
+            case "Remove Role":
+               remRole();
                break;
             
             case "View Departments":
@@ -128,27 +136,21 @@ function run() {
             case "Add Department":
                addDepartment();
                break;
-            
-            // Bonus --------------------------------------------------------------------------------
-            case "Remove Role":
-               remRole();
+               
+            case "Remove Department":
+               remDep();
                break;
+               
+            // Bonus --------------------------------------------------------------------------------
             
             // case "Update Employee's Manager":
             //    updEmpMan();
             //    break;
             
-            // case "Remove Employee":
-            //    remEmp();
-            //    break;
             
             // case "View all Employees By Manager":
             //    viewEmployeesMan();
             //    break;
-               
-            case "Remove Department":
-               remDep();
-               break;
                
             // case "View the total utilized budget of a department":
             //    viewTotBudget();
@@ -268,6 +270,75 @@ function addEmployee() {
    });
 };
 
+// Update Employee's Role
+// ------------------------------------------------------------------------------------------------
+function updateEmployeeRole() {
+   console.clear();
+   banner();
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "chooseEmp",
+         message: "Choose an Employee to be updated",
+         choices: employeesArr
+      },
+      {
+         type: "list",
+         name: "chooseRole",
+         message: "Choose a new Role",
+         choices: rolesArr
+      },
+      {
+         type: "list",
+         name: "chooseMan",
+         message: "Choose new Manager",
+         choices: employeesArr
+      }
+   ])
+   .then(answer => {
+      connection.query(`SELECT id FROM roles WHERE title = "${answer.chooseRole}"`, (err, res) => {
+         if (err) throw err;
+         const chosenRole = res[0].id;
+         
+         connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.chooseMan}"`, (err, res) => {
+            if (err) throw err;
+            const chosenMan = res[0].id;
+            
+            connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} 
+            WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
+               if (err) throw err;
+               message("EMPLOYEE UPDATED");
+               run();
+            })
+         });
+         
+      });
+   });
+};
+
+// Remove Employee
+// ------------------------------------------------------------------------------------------------
+function remEmp() {
+   console.clear();
+   banner();
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "remEmployee",
+         message: "Choose an Employee to be removed",
+         choices: employeesArr
+      }
+   ])
+   .then(answer => {
+      connection.query(`DELETE FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.remEmployee}"`, (err, res) => {
+         if (err) throw err;
+         message("EMPLOYEE REMOVED");
+         run();
+      })
+   })
+}
+
+
 // List of all Roles
 // ------------------------------------------------------------------------------------------------
 function viewRoles() {
@@ -343,52 +414,6 @@ function remRole() {
       });
 };
 
-// Update Employee's Role
-// ------------------------------------------------------------------------------------------------
-function updateEmployeeRole() {
-   console.clear();
-   banner();
-   inquirer.prompt([
-      {
-         type: "list",
-         name: "chooseEmp",
-         message: "Choose an Employee to be updated",
-         choices: employeesArr
-      },
-      {
-         type: "list",
-         name: "chooseRole",
-         message: "Choose a new Role",
-         choices: rolesArr
-      },
-      {
-         type: "list",
-         name: "chooseMan",
-         message: "Choose new Manager",
-         choices: employeesArr
-      }
-   ])
-      .then(answer => {
-         connection.query(`SELECT id FROM roles WHERE title = "${answer.chooseRole}"`, (err, res) => {
-            if (err) throw err;
-            const chosenRole = res[0].id;
-
-            connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.chooseMan}"`, (err, res) => {
-               if (err) throw err;
-               const chosenMan = res[0].id;
-            
-               connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} 
-                                 WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
-                  if (err) throw err;
-                  message("EMPLOYEE UPDATED");
-                  run();
-               })
-            });
-      
-         });
-      });
-};
-
 // List of all Departments
 // ------------------------------------------------------------------------------------------------
 function viewDepartments() {
@@ -424,7 +449,7 @@ function addDepartment() {
    });
 };
 
-// Add a Department
+// Remove a Department
 // ------------------------------------------------------------------------------------------------
 function remDep() {
    console.clear();
