@@ -406,7 +406,7 @@ function viewDepartments() {
 // ------------------------------------------------------------------------------------------------
 function addDepartment() {
    console.clear();
-   banner()
+   banner();
    inquirer.prompt([
       {
          type: "input",
@@ -426,7 +426,25 @@ function addDepartment() {
 
 // Add a Department
 // ------------------------------------------------------------------------------------------------
-
+function remDep() {
+   console.clear();
+   banner();
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "deleteDep",
+         message: "Choose a Department to be deleted",
+         choices: departmentsArr
+      }
+   ])
+   .then(answer => {
+         connection.query(`DELETE FROM departments WHERE department = "${answer.deleteDep}"`, err => {
+            if (err) throw err;
+            message("DEPARTMENT REMOVED");
+            run();
+         });
+      });
+};
 
 
 // Exit
