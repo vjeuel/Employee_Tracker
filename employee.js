@@ -71,7 +71,7 @@ connection.connect(function (err) {
 });
 
 function run() {
-   depArray();
+   departmentArray();
    employeesArray();
    rolesArray();
    inquirer.prompt({
@@ -92,8 +92,8 @@ function run() {
          // "View all Employees By Manager",
          // "Remove Employee",
          // "Update Employee's Manager",
-         // "Remove Role",
-         // "Remove Department",
+         "Remove Role",
+         "Remove Department",
          // "View the total utilized budget of a department",
          // -----------------------------------
          "Exit"
@@ -130,9 +130,9 @@ function run() {
                break;
             
             // Bonus --------------------------------------------------------------------------------
-            // case "Remove Role":
-            //    remRole();
-            //    break;
+            case "Remove Role":
+               remRole();
+               break;
             
             // case "Update Employee's Manager":
             //    updEmpMan();
@@ -146,9 +146,9 @@ function run() {
             //    viewEmployeesMan();
             //    break;
                
-            // case "Remove Department":
-            //    remDep();
-            //    break;
+            case "Remove Department":
+               remDep();
+               break;
                
             // case "View the total utilized budget of a department":
             //    viewTotBudget();
@@ -164,7 +164,7 @@ function run() {
 
 // mysql to Arrays ---------------------------------------------------------------------------------
 let departmentsArr = [];
-function depArray() {
+function departmentArray() {
    departmentsArr = [];
    connection.query(`SELECT department, id FROM departments`, (err, res) => {
       if (err) throw err;
@@ -284,7 +284,7 @@ function viewRoles() {
 // Add Role
 // ------------------------------------------------------------------------------------------------
 function addRole() {
-   depArray();
+   departmentArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -318,6 +318,29 @@ function addRole() {
          });
       });
    });
+};
+
+// Remove Role
+// ------------------------------------------------------------------------------------------------
+function remRole() {
+   // rolesArray();
+   console.clear();
+   banner();
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "deleteRole",
+         message: "Choose a Role to be deleted",
+         choices: rolesArr
+      }
+   ])
+   .then(answer => {
+         connection.query(`DELETE FROM roles WHERE title = "${answer.deleteRole}"`, err => {
+            if (err) throw err;
+            message("ROLE REMOVED");
+            run();
+         });
+      });
 };
 
 // Update Employee's Role
@@ -383,6 +406,7 @@ function viewDepartments() {
 // ------------------------------------------------------------------------------------------------
 function addDepartment() {
    console.clear();
+   banner()
    inquirer.prompt([
       {
          type: "input",
@@ -399,6 +423,11 @@ function addDepartment() {
       });
    });
 };
+
+// Add a Department
+// ------------------------------------------------------------------------------------------------
+
+
 
 // Exit
 // ------------------------------------------------------------------------------------------------
