@@ -84,6 +84,7 @@ function run() {
          "View all Employees By Manager",
          "Add Employee",
          "Update Employee's Role",
+         "Update Employee's Manager",
          "Remove Employee",
          // -----------------------------------
          "View Roles",
@@ -94,7 +95,6 @@ function run() {
          "Add Department",
          "Remove Department",
          // -----------------------------------
-         // "Update Employee's Manager",
          // "View the total utilized budget of a department",
          // -----------------------------------
          "Exit"
@@ -145,12 +145,12 @@ function run() {
          case "Remove Department":
             remDep();
             break;
+            
+         case "Update Employee's Manager":
+            updEmpMan();
+            break;
                
             // Bonus --------------------------------------------------------------------------------
-            
-            // case "Update Employee's Manager":
-            //    updEmpMan();
-            //    break;
                   
             // case "View the total utilized budget of a department":
             //    viewTotBudget();
@@ -344,7 +344,7 @@ function updateEmployeeRole() {
             const chosenMan = res[0].id;
             
             connection.query(`UPDATE employees SET role_id = ${chosenRole}, manager_id = ${chosenMan} 
-            WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
+                               WHERE CONCAT(first_name, " ", last_name) = "${answer.chooseEmp}"`, err => {
                if (err) throw err;
                message("EMPLOYEE UPDATED");
                run();
@@ -353,6 +353,40 @@ function updateEmployeeRole() {
          
       });
    });
+};
+
+// Update Employee by Manager
+// ------------------------------------------------------------------------------------------------
+function updEmpMan() {
+   console.clear();
+   banner();
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "chooseEmp",
+         message: "Choose an Employee to change Manager",
+         choices: employeesArr
+      },
+      {
+         type: "list",
+         name: "chooseMan",
+         message: "Choose a Manager for replacement (if a new Manager, create a new Manager first)",
+         choices: managersArr
+      }
+   ])
+      .then(answer => {
+         connection.query(`SELECT id FROM employees WHERE CONCAT(first_name, " ",last_name) = "${answer.chooseMan}"`, (err, res) => {
+            if (err) throw err;
+            const chosenMan = res[0].id;
+             
+            connection.query(`UPDATE employees SET manager_id = ${chosenMan}
+                           WHERE CONCAT(first_name," ", last_name) = "${answer.chooseEmp}"`, err => {
+               if (err) throw err;
+               message("MANAGER'S EMPLOYEE UPDATED");
+               run();
+            });
+         });
+      });
 };
 
 // Remove Employee
