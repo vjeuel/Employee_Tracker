@@ -74,6 +74,7 @@ function run() {
    departmentArray();
    employeesArray();
    rolesArray();
+   managersArray();
    inquirer.prompt({
       name: "general",
       type: "list",
@@ -188,7 +189,6 @@ function rolesArray() {
 
 let employeesArr = [];
 function employeesArray() {
-   // employeesArr = [];
    connection.query('SELECT CONCAT(first_name, " ", last_name) AS employee FROM employees', (err, res) => {
       if (err) throw err;
       for (let i = 0; i < res.length; i++) {
@@ -196,7 +196,19 @@ function employeesArray() {
       }
    });
 };
-      
+
+let managersArr = [];
+function managersArray() {
+   connection.query(`SELECT DISTINCT CONCAT (manager.first_name, " ", manager.last_name) AS manager
+                     FROM employees
+                     JOIN employees AS manager ON manager.ID = employees.manager_ID`, (err, res) => {
+      if (err) throw err;
+      for (let i = 0; i < res.length; i++) {
+         managersArr.push(res[i].manager)
+      }
+   });
+};
+
 // List of all Employees
 // ------------------------------------------------------------------------------------------------
 const queryEmployees = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
@@ -219,22 +231,31 @@ function viewEmployees() {
 
 // View all Employees by Manager
 // ------------------------------------------------------------------------------------------------
-const queryEmployeesMan = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
-                           roles.title, employees.manager_id, CONCAT(manager.first_name, " ", manager.last_name) AS manager
-                           FROM employees
-                           JOIN roles ON employees.role_id = roles.id
-                           JOIN employees AS manager ON employees.manager_id = manager.id
-                           ORDER BY manager_id;`;
-
 function viewEmployeesMan() {
    console.clear();
    banner();
-   connection.query(queryEmployeesMan, (err, res) => {
-      if (err) throw err;
-      console.table(res);
-      run();
-   })
-}
+   inquirer.prompt([
+      {
+         type: "list",
+         name: "viewByManager",
+         message: "Choose Manager to see his Employees",
+         choices: managersArr
+      }
+   ])
+      .then(answer => {
+         connection.query(`SELECT employees.id, CONCAT(employees.first_name, employees.last_name) AS employee, roles.title, 
+                           CONCAT(manager.first_name, " ", manager.last_name) AS manager 
+                           FROM employees 
+                           INNER JOIN roles ON employees.role_id = roles.id
+                           INNER JOIN employees AS manager ON employees.manager_id = manager.id
+                           WHERE CONCAT(manager.first_name, " ", manager.last_name) = "${answer.viewByManager}";`,
+            (err, res) => {
+               if (err) throw err;
+               console.table(res);
+                  run();
+            });
+      });
+};
 
 // Add Employees
 // ------------------------------------------------------------------------------------------------
