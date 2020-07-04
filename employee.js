@@ -4,6 +4,19 @@ const CFonts = require('cfonts');
 require("console.table");
 
 function start() {
+   console.clear();
+   function howdy() {
+      CFonts.say('HOWDY,|welcome to', {
+         font: 'chrome',               // define the font face
+         align: 'center',              // define text alignment
+         colors: ['yellow','yellow',
+                  'yellow'],           // define all colors
+         background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
+         env: 'node'                   // define the environment CFonts is being executed in
+      });
+   }
+   howdy();
+   
    function logo() {  
       CFonts.say('COWBOY|ad agency', {
          font: 'block',                // define the font face
@@ -16,21 +29,24 @@ function start() {
    
    setTimeout(() => {
    logo();
-   }, 1500);
-   
-   console.clear();
-   function howdy() {
-      CFonts.say('HOWDY,|welcome to', {
-         font: 'chrome',               // define the font face
-         align: 'center',              // define text alignment
-         colors: ['yellow','yellow',
-                  'yellow'],           // define all colors
-         background: 'transparent',    // define the background color, you can also use `backgroundColor` here as key
-         env: 'node'                   // define the environment CFonts is being executed in
-      });
-   }
-   howdy();      
-   };
+   }, 1000);   
+};
+
+var connection = mysql.createConnection({
+   host: "localhost",
+   port: 3306,
+   user: "root",
+   password: "",
+   database: "employee_db"
+});
+
+connection.connect(function (err) {
+   if (err) throw err;
+   start();
+   setTimeout(() => {
+      run();   
+   }, 2000);
+});
 
 function banner() {
    CFonts.say('EMPLOYEE TRACKER', {
@@ -54,26 +70,10 @@ function message(note) {
    });
 }
 
-var connection = mysql.createConnection({
-   host: "localhost",
-   port: 3306,
-   user: "root",
-   password: "",
-   database: "employee_db"
-});
-
-connection.connect(function (err) {
-   if (err) throw err;
-   start();
-   setTimeout(() => {
-      run();   
-   }, 3000);
-});
-
 function run() {
    departmentArray();
-   employeesArray();
    rolesArray();
+   employeesArray();
    managersArray();
    inquirer.prompt({
       name: "general",
@@ -149,17 +149,15 @@ function run() {
          case "Update Employee's Manager":
             updEmpMan();
             break;
-               
-            // Bonus --------------------------------------------------------------------------------
                   
-            // case "View the total utilized budget of a department":
-            //    viewTotBudget();
-            //    break;
+         // case "View the total utilized budget of a department":
+         //    viewTotBudget();
+         //    break;
                
-            case "Exit":
-               exit();
-               connection.end();
-               break;
+         case "Exit":
+            exit();
+            connection.end();
+            break;
          };
       });
 };
@@ -209,6 +207,7 @@ function managersArray() {
    });
 };
 
+
 // List of all Employees
 // ------------------------------------------------------------------------------------------------
 const queryEmployees = `SELECT employees.id, CONCAT(employees.first_name," ", employees.last_name) AS employee,
@@ -249,18 +248,18 @@ function viewEmployeesMan() {
                            INNER JOIN roles ON employees.role_id = roles.id
                            INNER JOIN employees AS manager ON employees.manager_id = manager.id
                            WHERE CONCAT(manager.first_name, " ", manager.last_name) = "${answer.viewByManager}";`,
-            (err, res) => {
-               if (err) throw err;
-               console.table(res);
-                  run();
-            });
+      (err, res) => {
+         if (err) throw err;
+         console.table(res);
+            run();
+      });
+      
       });
 };
 
 // Add Employees
 // ------------------------------------------------------------------------------------------------
 function addEmployee() {
-   rolesArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -428,7 +427,6 @@ function viewRoles() {
 // Add Role
 // ------------------------------------------------------------------------------------------------
 function addRole() {
-   departmentArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -467,7 +465,6 @@ function addRole() {
 // Remove Role
 // ------------------------------------------------------------------------------------------------
 function remRole() {
-   // rolesArray();
    console.clear();
    banner();
    inquirer.prompt([
@@ -541,7 +538,6 @@ function remDep() {
          });
       });
 };
-
 
 // Exit
 // ------------------------------------------------------------------------------------------------

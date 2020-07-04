@@ -20,7 +20,7 @@ This program is designed to manage Departments, Roles and Employees of a company
 `npm install`
 
 ## **Usage**<br>
-After installing the dependencies with `npm install` run the program using `node index.js`
+After installing the dependencies with `npm install`, create the database and tables using the `schema.sql` and add data using `seeds.sql`, run the program using `node index.js`
 
 ## **License**<br>
 mit
